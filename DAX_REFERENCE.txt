@@ -1,0 +1,119 @@
+// DAX MEASURES FOR POWER BI - Olist Intelligence
+
+// ============================================================
+// REVENUE MEASURES
+// ============================================================
+
+Total Revenue = SUM('payments'[payment_value])
+
+Revenue by Status = 
+    SUMIF('orders_transformed'[order_status], SELECTEDVALUE('orders_transformed'[order_status]), 'payments'[payment_value])
+
+Revenue Growth MoM = 
+    DIVIDE(
+        [Total Revenue] - CALCULATE([Total Revenue], PREVIOUSMONTH('date_table'[Date])),
+        CALCULATE([Total Revenue], PREVIOUSMONTH('date_table'[Date]))
+    )
+
+
+// ============================================================
+// ORDER MEASURES
+// ============================================================
+
+Total Orders = COUNTA('orders_transformed'[order_id])
+
+Unique Customers = DISTINCT('customers'[customer_id])
+
+Orders by Status = 
+    COUNTIF('orders_transformed'[order_status], SELECTEDVALUE('orders_transformed'[order_status]))
+
+Average Order Value = 
+    DIVIDE([Total Revenue], [Total Orders])
+
+
+// ============================================================
+// DELIVERY PERFORMANCE
+// ============================================================
+
+Delivery Rate = 
+    DIVIDE(
+        COUNTIF('orders_transformed'[order_status], "delivered"),
+        [Total Orders]
+    ) * 100
+
+On-Time Delivery % = 
+    DIVIDE(
+        COUNTIF('orders_transformed'[delivered_on_time], 1),
+        [Total Orders]
+    ) * 100
+
+Average Delivery Days = AVERAGE('orders_transformed'[delivery_time_days])
+
+Delayed Orders = COUNTIF('orders_transformed'[is_delayed], 1)
+
+
+// ============================================================
+// GEOGRAPHIC MEASURES
+// ============================================================
+
+Total States = DISTINCT('customers'[customer_state])
+
+Revenue by State = 
+    SUMIF('customers'[customer_state], 
+          SELECTEDVALUE('customers'[customer_state]),
+          RELATED('payments'[payment_value]))
+
+
+// ============================================================
+// PRODUCT MEASURES
+// ============================================================
+
+Total Products = DISTINCT('products'[product_id])
+
+Revenue by Category = 
+    SUMIF('products'[product_category_name],
+          SELECTEDVALUE('products'[product_category_name]),
+          RELATED('payments'[payment_value]))
+
+Top Category = 
+    MAXX(
+        TOPN(1, VALUES('products'[product_category_name]), [Revenue by Category]),
+        'products'[product_category_name]
+    )
+
+
+// ============================================================
+// PAYMENT ANALYSIS
+// ============================================================
+
+Payment Method Distribution = 
+    COUNTIF('payments'[payment_type], 
+            SELECTEDVALUE('payments'[payment_type]))
+
+Average Installments = AVERAGE('payments'[payment_installments])
+
+Credit Card Orders = 
+    COUNTIF('payments'[payment_type], "credit_card")
+
+
+// ============================================================
+// TIME-BASED MEASURES
+// ============================================================
+
+Orders This Month = 
+    CALCULATE(
+        [Total Orders],
+        DATESMTD(EOMONTH(TODAY(), 0))
+    )
+
+Orders Last Month = 
+    CALCULATE(
+        [Total Orders],
+        DATESMTD(EOMONTH(TODAY(), -1))
+    )
+
+MoM Growth = 
+    DIVIDE(
+        [Orders This Month] - [Orders Last Month],
+        [Orders Last Month]
+    ) * 100
