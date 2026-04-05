@@ -202,4 +202,3 @@ This BI solution enables:
 - Customer segmentation analysis
 - Supplier/seller performance metrics
 - Seasonality and trend forecasting
-- Real-time data refresh automation
